@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maturity Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0b;
+    --paper: #f5f0e8;
+    --paper-dark: #ece5d6;
+    --accent: #8b3a2a;
+    --accent-light: #c4614d;
+    --muted: #7a7268;
+    --line: #cfc8b8;
+    --score-low: #c4614d;
+    --score-mid: #b08940;
+    --score-high: #4a7c59;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── COVER ── */
+  #screen-cover {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    position: relative;
+  }
+
+  .cover-inner { max-width: 560px; }
+
+  .cover-rule {
+    width: 1px;
+    height: 80px;
+    background: var(--accent);
+    margin: 0 auto 2.5rem;
+    opacity: 0.6;
+    animation: fadeIn 1.2s ease both;
+  }
+
+  .cover-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+    animation: fadeUp 1s ease 0.2s both;
+  }
+
+  .cover-title {
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.4rem;
+    animation: fadeUp 1s ease 0.35s both;
+  }
+
+  .cover-title em { font-style: italic; color: var(--accent); }
+
+  .cover-sub {
+    font-size: 1.15rem;
+    font-weight: 300;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 420px;
+    margin: 0 auto 2.5rem;
+    animation: fadeUp 1s ease 0.5s both;
+  }
+
+  .cover-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--line);
+    margin-bottom: 2.5rem;
+    animation: fadeUp 1s ease 0.6s both;
+  }
+
+  /* ── AGE GATE ── */
+  #screen-age {
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 2rem;
+  }
+
+  .age-inner { max-width: 480px; width: 100%; }
+
+  .section-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.8rem;
+  }
+
+  .section-heading {
+    font-size: 2.6rem;
+    font-weight: 300;
+    line-height: 1.15;
+    margin-bottom: 0.8rem;
+  }
+
+  .section-sub {
+    font-size: 1.05rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin-bottom: 2.4rem;
+  }
+
+  .age-options { display: flex; gap: 1rem; margin-bottom: 2rem; }
+
+  .age-btn {
+    flex: 1;
+    padding: 1.4rem 1rem;
+    border: 1px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    transition: all 0.2s;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .age-btn:hover, .age-btn.selected {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .age-btn span {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+    margin-top: 0.3rem;
+  }
+
+  /* ── QUESTION ── */
+  #screen-question {
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .q-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--paper);
+  }
+
+  .q-progress-track {
+    flex: 1;
+    max-width: 300px;
+    height: 2px;
+    background: var(--line);
+    margin: 0 2rem;
+    position: relative;
+  }
+
+  .q-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.5s ease;
+  }
+
+  .q-counter {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .q-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    width: 100%;
+  }
+
+  .q-category-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.4rem;
+  }
+
+  .q-text {
+    font-size: clamp(1.3rem, 2.5vw, 1.65rem);
+    font-weight: 300;
+    line-height: 1.55;
+    margin-bottom: 2rem;
+    color: var(--ink);
+  }
+
+  .q-skip-note {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 1.8rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--line);
+  }
+
+  .q-textarea {
+    width: 100%;
+    min-height: 220px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    padding: 0.8rem 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    line-height: 1.75;
+    color: var(--ink);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .q-textarea:focus { border-bottom-color: var(--accent); }
+  .q-textarea::placeholder { color: var(--line); }
+
+  .q-char-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--line);
+    text-align: right;
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .skip-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    cursor: pointer;
+    margin-bottom: 2rem;
+    user-select: none;
+  }
+
+  .skip-toggle input { display: none; }
+
+  .skip-box {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .skip-toggle input:checked + .skip-box {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .skip-box::after {
+    content: '';
+    width: 8px;
+    height: 5px;
+    border-left: 1.5px solid var(--paper);
+    border-bottom: 1.5px solid var(--paper);
+    transform: rotate(-45deg) translateY(-1px);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .skip-toggle input:checked + .skip-box::after { opacity: 1; }
+
+  .skip-label {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── SELF SCORE ── */
+  .self-score-section {
+    margin-top: 1rem;
+    padding: 1.8rem;
+    border: 1px solid var(--line);
+    background: var(--paper-dark);
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .self-score-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .rubric-levels {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .rubric-level {
+    padding: 0.8rem 0.5rem;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    background: var(--paper);
+  }
+
+  .rubric-level:hover { border-color: var(--accent); }
+
+  .rubric-level.selected {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .rubric-level-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .rubric-level-name {
+    font-size: 0.78rem;
+    font-style: italic;
+    opacity: 0.8;
+    display: block;
+  }
+
+  .rubric-descriptions {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* ── PROCESSING ── */
+  #screen-processing {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .processing-glyph {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    animation: slowSpin 8s linear infinite;
+    display: inline-block;
+    opacity: 0.3;
+  }
+
+  .processing-title {
+    font-size: 2rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+  }
+
+  .processing-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .processing-steps {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-width: 320px;
+  }
+
+  .processing-step {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--line);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    transition: color 0.4s;
+  }
+
+  .processing-step.done { color: var(--muted); }
+  .processing-step.active { color: var(--accent); }
+
+  .step-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  /* ── RESULTS ── */
+  #screen-results {
+    flex-direction: column;
+  }
+
+  .results-header {
+    padding: 2rem;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+  }
+
+  .results-title {
+    font-size: 1.8rem;
+    font-weight: 300;
+    margin-bottom: 0.4rem;
+  }
+
+  .results-session {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: var(--line);
+  }
+
+  .results-body {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    width: 100%;
+  }
+
+  .score-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-bottom: 3rem;
+  }
+
+  .score-cell {
+    background: var(--paper);
+    padding: 1.8rem 1.2rem;
+    text-align: center;
+  }
+
+  .score-cell-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+
+  .score-cell-value {
+    font-size: 2.8rem;
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+
+  .score-cell-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .gap-positive { color: var(--score-high); }
+  .gap-zero { color: var(--muted); }
+  .gap-negative { color: var(--score-low); }
+
+  .category-scores {
+    margin-bottom: 3rem;
+  }
+
+  .cat-score-row {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .cat-score-name {
+    flex: 1;
+    font-size: 0.95rem;
+    font-style: italic;
+  }
+
+  .cat-score-bar-wrap {
+    width: 160px;
+    height: 3px;
+    background: var(--line);
+    position: relative;
+  }
+
+  .cat-score-bar {
+    height: 100%;
+    background: var(--accent);
+    transition: width 1s ease;
+  }
+
+  .cat-score-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    width: 28px;
+    text-align: right;
+  }
+
+  .narrative-section { margin-bottom: 3rem; }
+
+  .narrative-heading {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .narrative-text {
+    font-size: 1.1rem;
+    line-height: 1.85;
+    font-weight: 300;
+    color: var(--ink);
+  }
+
+  .narrative-text p { margin-bottom: 1.2rem; }
+
+  .awareness-callout {
+    padding: 1.5rem 1.8rem;
+    border-left: 3px solid var(--accent);
+    background: var(--paper-dark);
+    margin: 2rem 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    display: inline-block;
+    padding: 1rem 2.4rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    cursor: pointer;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover { background: var(--accent); }
+
+  .btn-ghost {
+    display: inline-block;
+    padding: 0.9rem 2rem;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+
+  .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+  .btn-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes slowSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .fade-in { animation: fadeIn 0.5s ease both; }
+  .fade-up { animation: fadeUp 0.4s ease both; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .rubric-levels { grid-template-columns: repeat(2, 1fr); }
+    .score-overview { grid-template-columns: 1fr; }
+    .age-options { flex-direction: column; }
+    .cat-score-bar-wrap { width: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ COVER ══════════════════════════════ -->
+<section id="screen-cover" class="screen active">
+  <div class="cover-inner">
+    <div class="cover-rule"></div>
+    <p class="cover-eyebrow">Psychological Maturity Assessment</p>
+    <h1 class="cover-title">Know <em>where</em><br>you stand.</h1>
+    <p class="cover-sub">A reflective, open-ended assessment that measures psychological maturity across five dimensions. There are no right answers — only honest ones.</p>
+    <p class="cover-meta">15–20 questions  ·  45–90 minutes  ·  AI-evaluated  ·  Anonymous</p>
+    <button class="btn-primary" onclick="goTo('age')">Begin Assessment</button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ AGE GATE ══════════════════════════════ -->
+<section id="screen-age" class="screen">
+  <div class="age-inner">
+    <p class="section-eyebrow">Before we begin</p>
+    <h2 class="section-heading">How old are you?</h2>
+    <p class="section-sub">Your age determines which version of the assessment you receive. Both versions measure the same five dimensions — scored against different developmental baselines.</p>
+    <div class="age-options">
+      <button class="age-btn" onclick="selectAge('under25', this)">
+        25 &amp; Under
+        <span>Identity formation · Kegan 3rd–4th order</span>
+      </button>
+      <button class="age-btn" onclick="selectAge('over25', this)">
+        26 &amp; Above
+        <span>Generativity · Kegan 4th–5th order</span>
+      </button>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="age-continue" onclick="startAssessment()" disabled style="opacity:0.4;cursor:not-allowed">Continue</button>
+      <button class="btn-ghost" onclick="goTo('cover')">← Back</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ QUESTION ══════════════════════════════ -->
+<section id="screen-question" class="screen">
+  <div class="q-header">
+    <span class="q-counter" id="q-counter">1 / 18</span>
+    <div class="q-progress-track">
+      <div class="q-progress-fill" id="q-progress" style="width:0%"></div>
+    </div>
+    <span class="q-counter" id="q-category-label">Identity</span>
+  </div>
+  <div class="q-body">
+    <p class="q-category-tag" id="q-tag">Category 01 · Identity & Self-Authorship</p>
+    <p class="q-text" id="q-text">Question text loads here.</p>
+    <p class="q-skip-note">If you have never had an experience related to this question, check the box below, briefly explain why, and move on. This will be noted in your assessment.</p>
+
+    <label class="skip-toggle">
+      <input type="checkbox" id="skip-checkbox" onchange="toggleSkip(this)">
+      <span class="skip-box"></span>
+      <span class="skip-label">I haven't had a related experience</span>
+    </label>
+
+    <textarea id="q-response" class="q-textarea" placeholder="Write freely. Take your time. Specificity matters more than eloquence." rows="8" oninput="updateCharCount()"></textarea>
+    <div class="q-char-count" id="char-count">0 words</div>
+
+    <div id="self-score-section" class="self-score-section" style="display:none">
+      <p class="self-score-label">Self-Assessment · Score your response</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.2rem;font-style:italic;">Read your response honestly, then score it against the rubric below. This is not about how well you write — it is about the depth of your actual self-awareness.</p>
+      <div class="rubric-levels" id="rubric-levels">
+        <div class="rubric-level" onclick="selectScore(1, this)">
+          <span class="rubric-level-num">1</span>
+          <span class="rubric-level-name">Beginning</span>
+        </div>
+        <div class="rubric-level" onclick="selectScore(2, this)">
+          <span class="rubric-level-num">2</span>
+          <span class="rubric-level-name">Developing</span>
+        </div>
+        <div class="rubric-level" onclick="selectScore(3, this)">
+          <span class="rubric-level-num">3</span>
+          <span class="rubric-level-name">Established</span>
+        </div>
+        <div class="rubric-level" onclick="selectScore(4, this)">
+          <span class="rubric-level-num">4</span>
+          <span class="rubric-level-name">Integrated</span>
+        </div>
+      </div>
+      <p class="rubric-descriptions" id="rubric-desc">Select a level to see what it means for this question.</p>
+    </div>
+
+    <div class="btn-row" style="margin-top:2rem" id="q-nav-row">
+      <button class="btn-primary" id="q-next-btn" onclick="nextQuestion()" disabled style="opacity:0.4;cursor:not-allowed">Next Question →</button>
+      <button class="btn-ghost" onclick="prevQuestion()">← Previous</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ PROCESSING ══════════════════════════════ -->
+<section id="screen-processing" class="screen">
+  <div>
+    <div class="processing-glyph">◎</div>
+    <h2 class="processing-title">Reading your responses</h2>
+    <p class="processing-sub">The AI is evaluating each answer independently.<br>This takes about 30–60 seconds.</p>
+    <div class="processing-steps" id="processing-steps">
+      <div class="processing-step" id="step-1"><span class="step-dot"></span>Analyzing response depth & specificity</div>
+      <div class="processing-step" id="step-2"><span class="step-dot"></span>Scoring against rubric categories</div>
+      <div class="processing-step" id="step-3"><span class="step-dot"></span>Comparing AI score to self-assessment</div>
+      <div class="processing-step" id="step-4"><span class="step-dot"></span>Generating narrative report</div>
+      <div class="processing-step" id="step-5"><span class="step-dot"></span>Logging to database</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ RESULTS ══════════════════════════════ -->
+<section id="screen-results" class="screen">
+  <div class="results-header">
+    <h2 class="results-title">Your Assessment</h2>
+    <p class="results-session" id="results-session-id">Session —</p>
+  </div>
+  <div class="results-body">
+    <div class="score-overview" id="score-overview"></div>
+    <div class="category-scores" id="category-scores"></div>
+    <div class="narrative-section">
+      <p class="narrative-heading">Narrative Report</p>
+      <div class="narrative-text" id="narrative-text"></div>
+    </div>
+    <div class="awareness-callout" id="awareness-callout"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="location.reload()">Take Again</button>
+    </div>
+  </div>
+</section>
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA — QUESTIONS
+// ══════════════════════════════════════════════════════
+
+const QUESTIONS = {
+  under25: [
+    { id:'u1', category:'Identity & Self-Authorship', tag:'ID · CC', text:'Think about a belief, value, or opinion you held strongly a few years ago that you no longer hold today. What changed? Walk through the moment or experience that started the shift — not just the conclusion you arrived at, but the discomfort of actually being in it.' },
+    { id:'u2', category:'Identity & Self-Authorship', tag:'ID', text:'Describe a moment when you realized you were living by someone else\'s rules — a parent\'s, a friend group\'s, a religion\'s, a culture\'s — without having consciously chosen them. What did you do with that realization? Are you still doing it?' },
+    { id:'u3', category:'Identity & Self-Authorship', tag:'ID · TR', text:'Who are you when no one is watching and there is nothing to perform? Describe a specific, ordinary moment that felt most like the real you — and then ask yourself honestly whether that person shows up in your daily life.' },
+    { id:'sa1', category:'Identity & Self-Authorship', tag:'SHARED · ID · CC · TR', text:'Describe a time you were completely and fundamentally wrong about something that mattered to you. Not a small mistake — something that required you to restructure how you saw yourself or the world. What did you do with that?' },
+    { id:'sa2', category:'Identity & Self-Authorship', tag:'SHARED · ID · GP', text:'What is something you genuinely want for your life that conflicts with something you genuinely value? Not a surface-level tradeoff — a real tension that does not have a clean resolution. How do you live inside that?' },
+    { id:'u6', category:'Relational Intimacy & Boundary Setting', tag:'RI · ID', text:'Describe a friendship or relationship where you lost yourself — where you slowly stopped knowing what you actually wanted because you were so focused on what they wanted or needed. How did you notice it? What did you do?' },
+    { id:'u7', category:'Relational Intimacy & Boundary Setting', tag:'RI', text:'Think of a time you set a boundary with someone important to you — or needed to but didn\'t. What made it hard? Walk through the internal experience, not just the outcome.' },
+    { id:'sa3', category:'Relational Intimacy & Boundary Setting', tag:'SHARED · RI · ID', text:'Describe a relationship — romantic, friendship, or family — that changed who you fundamentally are. Not just how you act, but how you see yourself and what you believe about people.' },
+    { id:'u9', category:'Relational Intimacy & Boundary Setting', tag:'CROSSOVER · RI · TR · CC', text:'Think of a person you found genuinely difficult to be around — someone whose behavior hurt or frustrated you repeatedly. Describe the situation concretely, then sit with this: what was the most honest and uncomfortable thing their behavior revealed about you?' },
+    { id:'u10', category:'Trauma Integration & Emotional Resilience', tag:'TR', text:'Describe a period of your life that was genuinely hard — not hard in a vague sense, but specifically hard. What did you tell yourself to get through it? Looking back, was that story true? Has it changed?' },
+    { id:'u11', category:'Trauma Integration & Emotional Resilience', tag:'TR', text:'Is there something painful from your past that you have not fully processed? You do not have to name it specifically — but describe what it feels like to carry it, and whether you have tried to put it down. What happened when you did?' },
+    { id:'u12', category:'Trauma Integration & Emotional Resilience', tag:'TR · RI', text:'Think of an emotion — anger, grief, fear, shame — that you find the hardest to feel without acting on or suppressing. Describe a specific recent moment when you felt it. What did you do? What do you wish you had done?' },
+    { id:'u13', category:'Cognitive Complexity & Meaning-Making', tag:'CC', text:'Describe a situation — social, political, personal, or moral — where you genuinely understand both sides and still cannot fully decide where you stand. Not because you haven\'t thought about it, but because the tension is real. What does it feel like to live in that uncertainty?' },
+    { id:'u14', category:'Cognitive Complexity & Meaning-Making', tag:'CC · ID', text:'Has there been a moment in your life where the explanation you had for something — an event, a person, a system — turned out to be far too simple? Describe what the more complicated truth was and what it cost you to accept it.' },
+    { id:'sa4', category:'Cognitive Complexity & Meaning-Making', tag:'SHARED · CC · ID · TR', text:'If you could go back and do one thing differently — not to erase it, but knowing no one else would ever find out — what would it be? Do not answer with what sounds good. Sit with it honestly.' },
+    { id:'u16', category:'Generativity & Systemic Purpose', tag:'GP · CC', text:'Is there a problem in the world — local, systemic, or interpersonal — that you feel a sense of personal responsibility toward? Describe it specifically. What have you actually done about it, even in a small way? What has stopped you from doing more?' },
+    { id:'u17', category:'Generativity & Systemic Purpose', tag:'GP · RI', text:'Think about the people who were formative for you — a teacher, a mentor, an older person who changed your trajectory. What did they give you that you could not have given yourself? And have you passed anything like that on to anyone?' },
+    { id:'u18', category:'Generativity & Systemic Purpose', tag:'CROSSOVER · GP · ID · TR', text:'Describe a moment when you chose your own comfort, ambition, or peace over the wellbeing of someone else — or of a broader group. Not a moment you are proud of. What justified it to you at the time? What do you think now?' },
+  ],
+  over25: [
+    { id:'o1', category:'Identity & Self-Authorship', tag:'ID · TR', text:'Describe an identity you held — a role, a title, a way of seeing yourself — that you have since had to let go of. Not by choice, but by life forcing your hand. How did you resist it? How did you eventually move through it?' },
+    { id:'o2', category:'Identity & Self-Authorship', tag:'ID · CC', text:'Are there contradictions in who you are that you have stopped trying to resolve? Describe one. Not as a philosophical exercise — but as a real thing you live with. What did it take to stop fighting it?' },
+    { id:'o3', category:'Identity & Self-Authorship', tag:'ID · TR', text:'Think about who you are in a crisis versus who you are when life is comfortable. Are those the same person? Describe a specific moment in each state — and be honest about which version of yourself you respect more and why.' },
+    { id:'sa1', category:'Identity & Self-Authorship', tag:'SHARED · ID · CC · TR', text:'Describe a time you were completely and fundamentally wrong about something that mattered to you. Not a small mistake — something that required you to restructure how you saw yourself or the world. What did you do with that?' },
+    { id:'sa2', category:'Identity & Self-Authorship', tag:'SHARED · ID · GP', text:'What is something you genuinely want for your life that conflicts with something you genuinely value? Not a surface-level tradeoff — a real tension that does not have a clean resolution. How do you live inside that?' },
+    { id:'o6', category:'Relational Intimacy & Boundary Setting', tag:'RI · ID', text:'Describe a relationship — with a partner, a friend, a family member — where you stayed longer than you should have. What were you telling yourself that kept you there? What was the real reason?' },
+    { id:'o7', category:'Relational Intimacy & Boundary Setting', tag:'RI · TR', text:'Think of someone you have genuinely forgiven — not said the words to, but actually moved through. Describe what the forgiveness actually felt like internally. Was there a moment it shifted? What made it possible?' },
+    { id:'sa3', category:'Relational Intimacy & Boundary Setting', tag:'SHARED · RI · ID', text:'Describe a relationship — romantic, friendship, or family — that changed who you fundamentally are. Not just how you act, but how you see yourself and what you believe about people.' },
+    { id:'o9', category:'Relational Intimacy & Boundary Setting', tag:'CROSSOVER · RI · TR · ID', text:'Describe a relationship where you were the one who caused harm — not accidentally, but through a pattern you were aware of and repeated anyway. What were you protecting? What did it cost the other person? What did it cost you?' },
+    { id:'o10', category:'Trauma Integration & Emotional Resilience', tag:'TR', text:'Describe something painful from your past that you have genuinely integrated — not resolved, not moved on from, but actually made peace with. What did the process actually look like? Not the summary of it, but the texture of it.' },
+    { id:'o11', category:'Trauma Integration & Emotional Resilience', tag:'TR · CC', text:'Is there grief you are still carrying — for a person, a version of yourself, a life you did not get to live? Describe what it feels like now compared to how it felt when it was fresh. What has changed and what has not?' },
+    { id:'o12', category:'Trauma Integration & Emotional Resilience', tag:'TR · ID', text:'Think of a coping mechanism you relied on for years — something that worked, until it didn\'t. Describe what it gave you, what it cost you, and what replacing it actually required.' },
+    { id:'o13', category:'Cognitive Complexity & Meaning-Making', tag:'CC · ID', text:'Describe a deeply held belief — moral, political, philosophical, or personal — that you can now argue against convincingly. Not because you have abandoned it, but because you understand it fully enough to see its limits. What does holding that tension feel like?' },
+    { id:'o14', category:'Cognitive Complexity & Meaning-Making', tag:'CC · ID · GP', text:'Think about a system you were raised inside — a religion, an ideology, a family structure, a culture — that you now see differently. Describe what you were unable to see from the inside, and what made it possible to see it from the outside. What did you keep?' },
+    { id:'sa4', category:'Cognitive Complexity & Meaning-Making', tag:'SHARED · CC · ID · TR', text:'If you could go back and do one thing differently — not to erase it, but knowing no one else would ever find out — what would it be? Do not answer with what sounds good. Sit with it honestly.' },
+    { id:'o16', category:'Generativity & Systemic Purpose', tag:'GP · ID', text:'What is the most meaningful thing you have built, contributed to, or passed on — something that will exist or matter beyond your own life? Describe it specifically. And be honest about the gap, if there is one, between what you intended and what actually happened.' },
+    { id:'o17', category:'Generativity & Systemic Purpose', tag:'GP · RI', text:'Is there a person — younger than you, or earlier in their journey — whose life you have genuinely shaped in a meaningful way? Describe what you gave them and what it required of you. And describe where you held back.' },
+    { id:'o18', category:'Generativity & Systemic Purpose', tag:'GP · ID · TR', text:'Looking at the arc of your life so far — the choices, the losses, the things you built and the things you abandoned — can you make sense of it as a coherent whole? Not a tidy narrative, but something with meaning. What is the thread, if there is one?' },
+    { id:'o19', category:'Generativity & Systemic Purpose', tag:'CROSSOVER · GP · ID · CC', text:'Describe the version of yourself you thought you would be by now. Not the fantasy — the genuine expectation. Where did that person diverge from who you actually became? What do you make of that divergence today?' },
+  ]
+};
+
+const RUBRIC_DESCRIPTIONS = {
+  1: 'Beginning — Relies on external validation, reacts rather than reflects, avoids internal tension. May sound principled but reveals borrowed values.',
+  2: 'Developing — Acknowledges the self as distinct from roles. Shows active questioning and emerging independence, but lacks firm integration.',
+  3: 'Established — Demonstrates self-authored values and clear boundaries. Can hold tension honestly. Specificity and emotional honesty present.',
+  4: 'Integrated — Identity is dynamic, not fixed. Deep comfort with ambiguity, contradictory truths, and systemic complexity. Real-world integration evident.'
+};
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+
+let state = {
+  ageGroup: null,
+  questions: [],
+  currentIndex: 0,
+  responses: [],
+  sessionId: null
+};
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function selectAge(group, btn) {
+  state.ageGroup = group;
+  document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const cont = document.getElementById('age-continue');
+  cont.disabled = false;
+  cont.style.opacity = '1';
+  cont.style.cursor = 'pointer';
+}
+
+function generateSessionId() {
+  return 'MA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2,4).toUpperCase();
+}
+
+function startAssessment() {
+  if (!state.ageGroup) return;
+  state.questions = QUESTIONS[state.ageGroup];
+  state.responses = state.questions.map(() => ({ text: '', selfScore: null, skipped: false }));
+  state.currentIndex = 0;
+  state.sessionId = generateSessionId();
+  goTo('question');
+  renderQuestion();
+}
+
+// ══════════════════════════════════════════════════════
+// QUESTION RENDERING
+// ══════════════════════════════════════════════════════
+
+function renderQuestion() {
+  const q = state.questions[state.currentIndex];
+  const r = state.responses[state.currentIndex];
+  const total = state.questions.length;
+  const idx = state.currentIndex;
+
+  document.getElementById('q-counter').textContent = `${idx + 1} / ${total}`;
+  document.getElementById('q-progress').style.width = `${(idx / total) * 100}%`;
+  document.getElementById('q-category-label').textContent = q.category.split(' &')[0];
+  document.getElementById('q-tag').textContent = `Category · ${q.category}`;
+  document.getElementById('q-text').textContent = q.text;
+
+  const skipCb = document.getElementById('skip-checkbox');
+  skipCb.checked = r.skipped;
+
+  const ta = document.getElementById('q-response');
+  ta.value = r.text;
+  ta.disabled = r.skipped;
+  ta.style.opacity = r.skipped ? '0.3' : '1';
+  updateCharCount();
+
+  const scoreSection = document.getElementById('self-score-section');
+  const shouldShowScore = r.text.trim().split(/\s+/).length >= 30 || r.skipped;
+  scoreSection.style.display = shouldShowScore ? 'block' : 'none';
+
+  document.querySelectorAll('.rubric-level').forEach(el => el.classList.remove('selected'));
+  if (r.selfScore) {
+    document.querySelectorAll('.rubric-level')[r.selfScore - 1]?.classList.add('selected');
+    document.getElementById('rubric-desc').textContent = RUBRIC_DESCRIPTIONS[r.selfScore];
+  } else {
+    document.getElementById('rubric-desc').textContent = 'Select a level to see what it means for this question.';
+  }
+
+  updateNextBtn();
+}
+
+function updateCharCount() {
+  const text = document.getElementById('q-response').value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  document.getElementById('char-count').textContent = words + ' words';
+
+  const r = state.responses[state.currentIndex];
+  r.text = document.getElementById('q-response').value;
+
+  const scoreSection = document.getElementById('self-score-section');
+  if (words >= 30 && !r.skipped) {
+    scoreSection.style.display = 'block';
+  }
+  updateNextBtn();
+}
+
+function toggleSkip(cb) {
+  const r = state.responses[state.currentIndex];
+  r.skipped = cb.checked;
+  const ta = document.getElementById('q-response');
+  ta.disabled = cb.checked;
+  ta.style.opacity = cb.checked ? '0.3' : '1';
+  if (cb.checked) ta.value = '[SKIPPED — no related experience]';
+  else if (ta.value === '[SKIPPED — no related experience]') ta.value = '';
+  r.text = ta.value;
+  document.getElementById('self-score-section').style.display = cb.checked ? 'block' : 'none';
+  updateNextBtn();
+}
+
+function selectScore(score, el) {
+  state.responses[state.currentIndex].selfScore = score;
+  document.querySelectorAll('.rubric-level').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('rubric-desc').textContent = RUBRIC_DESCRIPTIONS[score];
+  updateNextBtn();
+}
+
+function updateNextBtn() {
+  const r = state.responses[state.currentIndex];
+  const hasContent = r.skipped || r.text.trim().split(/\s+/).length >= 10;
+  const hasScore = r.selfScore !== null;
+  const scoreVisible = document.getElementById('self-score-section').style.display !== 'none';
+  const ready = hasContent && (!scoreVisible || hasScore);
+  const btn = document.getElementById('q-next-btn');
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.4';
+  btn.style.cursor = ready ? 'pointer' : 'not-allowed';
+
+  const isLast = state.currentIndex === state.questions.length - 1;
+  btn.textContent = isLast ? 'Submit Assessment →' : 'Next Question →';
+}
+
+function nextQuestion() {
+  if (state.currentIndex < state.questions.length - 1) {
+    state.currentIndex++;
+    renderQuestion();
+    window.scrollTo(0,0);
+  } else {
+    submitAssessment();
+  }
+}
+
+function prevQuestion() {
+  if (state.currentIndex > 0) {
+    state.currentIndex--;
+    renderQuestion();
+    window.scrollTo(0,0);
+  } else {
+    goTo('age');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// SUBMISSION & AI SCORING
+// ══════════════════════════════════════════════════════
+
+async function submitAssessment() {
+  goTo('processing');
+  animateSteps();
+
+  const payload = {
+    sessionId: state.sessionId,
+    ageGroup: state.ageGroup,
+    questions: state.questions.map((q, i) => ({
+      id: q.id,
+      category: q.category,
+      tag: q.tag,
+      text: q.text,
+      response: state.responses[i].text,
+      selfScore: state.responses[i].selfScore,
+      skipped: state.responses[i].skipped
+    }))
+  };
+
+  try {
+    const res = await fetch('/api/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    renderResults(data);
+  } catch (err) {
+    console.error(err);
+    document.getElementById('screen-processing').innerHTML = `
+      <div style="text-align:center;padding:4rem 2rem">
+        <p style="font-size:1.2rem;color:var(--accent);margin-bottom:1rem">Something went wrong.</p>
+        <p style="color:var(--muted);font-style:italic">Please check your connection and try again.</p>
+      </div>`;
+  }
+}
+
+function animateSteps() {
+  const steps = ['step-1','step-2','step-3','step-4','step-5'];
+  steps.forEach((id, i) => {
+    setTimeout(() => {
+      document.querySelectorAll('.processing-step').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById(id);
+      if (el) { el.classList.add('active'); }
+      if (i > 0) document.getElementById(steps[i-1])?.classList.add('done');
+    }, i * 6000);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// RESULTS RENDERING
+// ══════════════════════════════════════════════════════
+
+function renderResults(data) {
+  goTo('results');
+
+  document.getElementById('results-session-id').textContent = 'Session ' + state.sessionId;
+
+  const avgAI = data.averageAiScore?.toFixed(1) || '—';
+  const avgSelf = data.averageSelfScore?.toFixed(1) || '—';
+  const gap = data.awarenessGap;
+  const gapClass = gap > 0.5 ? 'gap-negative' : gap < -0.5 ? 'gap-negative' : 'gap-zero';
+  const gapLabel = gap > 0.5 ? 'Overestimating' : gap < -0.5 ? 'Underestimating' : 'Calibrated';
+
+  document.getElementById('score-overview').innerHTML = `
+    <div class="score-cell">
+      <p class="score-cell-label">AI Score</p>
+      <p class="score-cell-value">${avgAI}</p>
+      <p class="score-cell-sub">out of 4.0</p>
+    </div>
+    <div class="score-cell">
+      <p class="score-cell-label">Self Score</p>
+      <p class="score-cell-value">${avgSelf}</p>
+      <p class="score-cell-sub">out of 4.0</p>
+    </div>
+    <div class="score-cell">
+      <p class="score-cell-label">Awareness Gap</p>
+      <p class="score-cell-value ${gapClass}">${Math.abs(gap)?.toFixed(1) || '—'}</p>
+      <p class="score-cell-sub">${gapLabel}</p>
+    </div>
+  `;
+
+  const cats = ['Identity & Self-Authorship','Relational Intimacy & Boundary Setting','Trauma Integration & Emotional Resilience','Cognitive Complexity & Meaning-Making','Generativity & Systemic Purpose'];
+  document.getElementById('category-scores').innerHTML = cats.map(cat => {
+    const score = data.categoryScores?.[cat] || 0;
+    const pct = (score / 4) * 100;
+    return `<div class="cat-score-row">
+      <span class="cat-score-name">${cat}</span>
+      <div class="cat-score-bar-wrap"><div class="cat-score-bar" style="width:${pct}%"></div></div>
+      <span class="cat-score-num">${score.toFixed(1)}</span>
+    </div>`;
+  }).join('');
+
+  const narrative = (data.narrative || '').split('\n\n').filter(Boolean)
+    .map(p => `<p>${p}</p>`).join('');
+  document.getElementById('narrative-text').innerHTML = narrative;
+  document.getElementById('awareness-callout').textContent = data.awarenessInsight || '';
+}
+</script>
+</body>
+</html>
