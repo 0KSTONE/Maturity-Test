@@ -1,14 +1,12 @@
 # Maturity Assessment — Setup & Deployment Guide
 
 ## What You're Deploying
-# BF
 ```
 maturity-assessment/
-├── public/
-│   └── index.html          ← The full assessment frontend
+├── index.html              ← The full assessment frontend
 ├── api/
 │   └── evaluate.js         ← Serverless function: AI scoring + Supabase logging
-├── vercel.json             ← Vercel routing config
+├── vercel.json             ← Minimal Vercel project config
 ├── supabase_schema.sql     ← Database schema + analytics queries
 └── SETUP.md                ← This file
 ```
@@ -137,9 +135,9 @@ For low-volume testing and early data collection, Vercel and Supabase are both f
 
 ## Updating Questions or Scoring
 
-- **Questions:** Edit the `QUESTIONS` object in `public/index.html`
+- **Questions:** Edit the `QUESTIONS` object in `index.html`
 - **AI scoring logic:** Edit the `SYSTEM_PROMPT` constant in `api/evaluate.js`
-- **Rubric descriptions shown to users:** Edit `RUBRIC_DESCRIPTIONS` in `public/index.html`
+- **Rubric descriptions shown to users:** Edit `RUBRIC_DESCRIPTIONS` in `index.html`
 - After any changes: run `vercel --prod` to redeploy
 
 ---

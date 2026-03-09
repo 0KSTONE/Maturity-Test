@@ -223,6 +223,14 @@
     margin-bottom: 1.4rem;
   }
 
+  .session-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+  }
+
   .q-text {
     font-size: clamp(1.3rem, 2.5vw, 1.65rem);
     font-weight: 300;
@@ -682,6 +690,7 @@
   </div>
   <div class="q-body">
     <p class="q-category-tag" id="q-tag">Category 01 · Identity & Self-Authorship</p>
+    <p class="session-meta" id="question-session-id">Session —</p>
     <p class="q-text" id="q-text">Question text loads here.</p>
     <p class="q-skip-note">If you have never had an experience related to this question, check the box below, briefly explain why, and move on. This will be noted in your assessment.</p>
 
@@ -730,6 +739,7 @@
   <div>
     <div class="processing-glyph">◎</div>
     <h2 class="processing-title">Reading your responses</h2>
+    <p class="results-session" id="processing-session-id">Session —</p>
     <p class="processing-sub">The AI is evaluating each answer independently.<br>This takes about 30–60 seconds.</p>
     <div class="processing-steps" id="processing-steps">
       <div class="processing-step" id="step-1"><span class="step-dot"></span>Analyzing response depth & specificity</div>
@@ -853,12 +863,21 @@ function generateSessionId() {
   return 'MA-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2,4).toUpperCase();
 }
 
+function updateSessionLabels() {
+  const label = state.sessionId ? 'Session ' + state.sessionId : 'Session —';
+  ['question-session-id', 'processing-session-id', 'results-session-id'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+}
+
 function startAssessment() {
   if (!state.ageGroup) return;
   state.questions = QUESTIONS[state.ageGroup];
   state.responses = state.questions.map(() => ({ text: '', selfScore: null, skipped: false }));
   state.currentIndex = 0;
   state.sessionId = generateSessionId();
+  updateSessionLabels();
   goTo('question');
   renderQuestion();
 }
@@ -873,6 +892,7 @@ function renderQuestion() {
   const total = state.questions.length;
   const idx = state.currentIndex;
 
+  updateSessionLabels();
   document.getElementById('q-counter').textContent = `${idx + 1} / ${total}`;
   document.getElementById('q-progress').style.width = `${(idx / total) * 100}%`;
   document.getElementById('q-category-label').textContent = q.category.split(' &')[0];
@@ -1032,8 +1052,7 @@ function animateSteps() {
 
 function renderResults(data) {
   goTo('results');
-
-  document.getElementById('results-session-id').textContent = 'Session ' + state.sessionId;
+  updateSessionLabels();
 
   const avgAI = data.averageAiScore?.toFixed(1) || '—';
   const avgSelf = data.averageSelfScore?.toFixed(1) || '—';
